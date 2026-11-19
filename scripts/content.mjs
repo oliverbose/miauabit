@@ -28,8 +28,8 @@ export const languages = {
 export const stops = [
   {
     id: 'jacques', view: 'usa',
-    en: ['Takoma Park', 'January 2018', 'The case of the mystery meow', 'Jacques’s first five years are a mystery. The Washington D.C. Humane Society knew he’d been found in an apartment hallway. His new family adopted him in January 2018. He always meowed through Takoma Park on car rides, so naturally the family declared it the scene of the crime. Evidence? One very vocal witness.'],
-    de: ['Takoma Park', 'Januar 2018', 'Der Fall des rätselhaften Miauens', 'Jacques’ erste fünf Jahre sind ein Rätsel. Das Tierheim der Washington D.C. Humane Society wusste nur, dass man ihn in einem Hausflur gefunden hatte. Im Januar 2018 zog er zu seiner neuen Familie. Bei Autofahrten durch Takoma Park miaute er immer so laut, dass die Familie den Ort kurzerhand zum Fundort erklärte. Beweislage? Ein sehr gesprächiger Zeuge.'],
+    en: ['Takoma', 'January 2018', 'The case of the mystery meow', 'Jacques’s first five years are a mystery. The Washington D.C. Humane Society knew he’d been found in an apartment hallway. His new family adopted him in January 2018. He always meowed through Takoma on car rides, so naturally the family declared it the scene of the crime. Evidence? One very vocal witness.'],
+    de: ['Takoma', 'Januar 2018', 'Der Fall des rätselhaften Miauens', 'Jacques’ erste fünf Jahre sind ein Rätsel. Das Tierheim der Washington D.C. Humane Society wusste nur, dass man ihn in einem Hausflur gefunden hatte. Im Januar 2018 zog er zu seiner neuen Familie. Bei Autofahrten durch Takoma miaute er immer so laut, dass die Familie den Ort kurzerhand zum Fundort erklärte. Beweislage? Ein sehr gesprächiger Zeuge.'],
   },
   {
     id: 'north-carolina', view: 'usa',
@@ -59,7 +59,7 @@ export const stops = [
   {
     id: 'flight', view: 'atlantic',
     en: ['The Atlantic', 'November 2022', 'Two cats. Cabin class.', 'Jacques and Xena crossed the Atlantic as pets in the cabin. Their destination was Berlin. For two passengers accustomed to a good window ledge, the ground was unusually far away.'],
-    de: ['Der Atlantik', 'November 2022', 'Zwei Katzen. Kabinenklasse.', 'Jacques und Xena flogen in der Passagierkabine über den Atlantik. Das Ziel war Berlin. Für zwei Katzen, die gern auf der Fensterbank sitzen, war der Boden diesmal ungewöhnlich weit weg.'],
+    de: ['Der Atlantik', 'November 2022', 'Zwei Katzen. Economy-Class.', 'Jacques und Xena flogen in der Passagierkabine über den Atlantik. Das Ziel war Berlin. Für zwei Katzen, die gern auf der Fensterbank sitzen, war der Boden diesmal ungewöhnlich weit weg.'],
   },
   {
     id: 'friedrichshain', view: 'berlin',

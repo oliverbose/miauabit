@@ -15,7 +15,7 @@ function render(lang, copy, preview = false) {
   const other = 'https://' + copy.other + '/';
   const switchTo = preview ? '../' + otherLang + '/' : other;
   const altIndex = lang === 'en' ? 1 : 2;
-  const cover = photos.find((photo) => photo[3] === start) ?? photos[0];
+  const cover = photos.find((photo) => photo[3] === start);
   const views = ['atlantic', 'usa', 'berlin'];
   const photo = ([filename, ...details], loading = 'lazy') =>
     '<img src="assets/photos/' + filename + '" alt="' + escape(details[altIndex - 1]) + '" loading="' + loading + '">';
@@ -60,6 +60,8 @@ function render(lang, copy, preview = false) {
       <div class="map" data-map data-view-name="atlantic">
         <div class="map-art" aria-hidden="true"></div>
         <canvas class="map-drawing" width="1000" height="500" aria-hidden="true"></canvas>
+        <div class="map-pawprints" aria-hidden="true"></div>
+        <template id="map-pawprint">${paw}</template>
         <div class="pins"></div>
         <span class="map-note">${copy.distant}</span>
       </div>

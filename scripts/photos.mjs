@@ -1,6 +1,6 @@
 // [Filename, English alt text, German alt text, optional postcard.]
 export const photos = [
-  ['chair-nap.webp', 'Jacques and Xena curled together on a patterned chair', 'Jacques und Xena schlafen eng zusammengerollt auf einem gemusterten Sessel', 'petworth'],
+  ['chair-nap.webp', 'Jacques and Xena curled together on a patterned chair', 'Jacques und Xena schlafen eng zusammengerollt auf einem gemusterten Sessel', 'brooklyn'],
   ['window-watch.webp', 'Jacques and Xena watching the world through a window', 'Jacques und Xena schauen gemeinsam aus dem Fenster'],
   ['bathtub.webp', 'Jacques peeking over the side of a bathtub', 'Jacques lugt über den Rand der Badewanne', 'jacques'],
   ['basket.webp', 'Jacques hiding in a woven basket', 'Jacques versteckt sich in einem geflochtenen Korb'],

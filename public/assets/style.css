@@ -62,10 +62,23 @@ h1 { margin:0; font-size:clamp(2.65rem, 5.35vw, 5.2rem); letter-spacing:-.059em;
 .play { background:var(--rust); color:var(--cream); padding-inline:1rem; }
 .play:hover { background:var(--rust-dark); }
 .map { position:relative; isolation:isolate; aspect-ratio: 2; min-height: 330px; background:#b2d1bd; border:1px solid #729484; border-radius:12px 16px 11px 16px; overflow:hidden; }
-.map-art, .map-drawing, .pins { position:absolute; inset:0; width:100%; height:100%; }
+.map-art, .map-drawing, .map-pawprints, .pins { position:absolute; inset:0; width:100%; height:100%; }
 .map-art { background:url(atlantic.webp) center / 100% 100%; }
 [data-view-name=usa] .map-art { background-size:320% 145%; background-position:0 98%; }
 [data-view-name=berlin] .map-art { background:#e6d9ad; }
+.map-pawprints { pointer-events:none; }
+.map-pawprints .paw {
+  position:absolute;
+  color:var(--rust-dark);
+  opacity:0;
+  filter:drop-shadow(0 0 1px var(--cream));
+  transform:translate(-50%, -50%) rotate(var(--heading)) scale(.82);
+  animation:map-pawprint 780ms var(--delay) both;
+}
+@keyframes map-pawprint {
+  0%, 100% { opacity:0; }
+  16%, 62% { opacity:.92; }
+}
 .pin { position:absolute; display:grid; place-items:center; transform:translate(-50%,-50%); min-width:36px; min-height:36px; text-decoration:none; color:var(--ink); z-index:1; }
 .pin:focus-visible, .pin:hover, .pin[data-active] { z-index:3; }
 .pin-dot { width:19px; height:19px; background:var(--ink); border:3px solid var(--cream); border-radius:50%; box-shadow:0 1px 3px #24332c66; }

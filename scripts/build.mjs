@@ -1,5 +1,6 @@
 import { cp, mkdir, writeFile } from 'node:fs/promises';
 import { languages, stops } from './content.mjs';
+import { legalCopy } from './legal.mjs';
 import { photos } from './photos.mjs';
 
 const escape = (value) => value.replace(/[&<>"']/g, (char) => ({
@@ -8,6 +9,60 @@ const escape = (value) => value.replace(/[&<>"']/g, (char) => ({
 
 const paw = '<span class="paw" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></span>';
 const start = 'petworth';
+
+function footer(lang, siteLine) {
+  const legal = legalCopy[lang];
+  return `<footer class="shell footer">
+  ${paw}<span>${escape(siteLine)}</span>
+  <nav class="footer-legal" aria-label="${legal.navigation}">
+    <a href="${legal.imprint.file}">${legal.imprint.title}</a>
+    <a href="${legal.privacy.file}">${legal.privacy.title}</a>
+  </nav>
+</footer>`;
+}
+
+function renderLegal(lang, copy, page, preview) {
+  const legal = legalCopy[lang];
+  const { title, file } = legal[page];
+  const otherLang = lang === 'de' ? 'en' : 'de';
+  const otherFile = legalCopy[otherLang][page].file;
+  const otherUrl = `https://${copy.other}/${otherFile}`;
+  const switchTo = preview ? `../${otherLang}/${otherFile}` : otherUrl;
+  return `<!doctype html>
+<html lang="${lang}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+${preview ? '<meta name="robots" content="noindex">' : ''}
+<title>${title} · ${copy.brand}</title>
+<link rel="canonical" href="https://${copy.domain}/${file}">
+<link rel="alternate" hreflang="${otherLang}" href="${otherUrl}">
+<link rel="icon" href="assets/cats.webp">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="masthead shell">
+  <a class="brand" href="./">${copy.brand}${paw}</a>
+  <nav class="languages" aria-label="${lang === 'de' ? 'Sprache' : 'Language'}">
+    <span aria-current="page">${lang.toUpperCase()}</span>
+    <a href="${switchTo}" lang="${otherLang}" hreflang="${otherLang}" aria-label="${copy.otherLanguage}">${otherLang.toUpperCase()}</a>
+  </nav>
+</header>
+<main class="shell legal-page">
+  <a href="./">${legal.back}</a>
+  <h1>${title}</h1>
+  <p>${page === 'imprint' ? legal.siteType : legal.scope}</p>
+  ${page === 'privacy' ? legal.sections.map(({ title, paragraphs, sources = [] }) => `<section>
+    <h2>${title}</h2>
+    ${paragraphs.map((paragraph) => `<p>${escape(paragraph)}</p>`).join('\n    ')}
+    ${sources.map(([label, href]) => `<p><a href="${href}">${escape(label)}</a></p>`).join('\n    ')}
+  </section>`).join('\n  ') : ''}
+</main>
+${footer(lang, copy.siteLine)}
+</body>
+</html>
+`;
+}
 
 function render(lang, copy, preview = false) {
   const otherLang = lang === 'de' ? 'en' : 'de';
@@ -95,7 +150,7 @@ function render(lang, copy, preview = false) {
     <div><button type="button" data-photo-step="-1">${copy.previousPhoto}</button><button type="button" data-photo-step="1">${copy.nextPhoto}</button></div>
   </dialog>` : ''}
 </main>
-<footer class="shell footer">${paw}<span>${copy.siteLine}</span></footer>
+${footer(lang, copy.siteLine)}
 <script type="application/json" id="journey-data">${JSON.stringify({
   copy, photos: photos.map((entry) => [entry[0], entry[altIndex], entry[3] ?? null]),
   chapters: stops.map(({id, view, [lang]: [name]}) => ({id, view, name})),
@@ -107,11 +162,12 @@ function render(lang, copy, preview = false) {
 }
 
 for (const [lang, copy] of Object.entries(languages)) {
-  const directory = 'dist/' + copy.brand;
-  await mkdir(directory, { recursive: true });
-  await cp('public/assets', directory + '/assets', { recursive: true });
-  await writeFile(directory + '/index.html', render(lang, copy));
-  await mkdir('dist/preview/' + lang, { recursive: true });
-  await cp('public/assets', 'dist/preview/' + lang + '/assets', { recursive: true });
-  await writeFile('dist/preview/' + lang + '/index.html', render(lang, copy, true));
+  for (const [directory, preview] of [['dist/' + copy.brand, false], ['dist/preview/' + lang, true]]) {
+    await mkdir(directory, { recursive: true });
+    await cp('public/assets', directory + '/assets', { recursive: true });
+    await writeFile(directory + '/index.html', render(lang, copy, preview));
+    for (const page of ['imprint', 'privacy']) {
+      await writeFile(directory + '/' + legalCopy[lang][page].file, renderLegal(lang, copy, page, preview));
+    }
+  }
 }

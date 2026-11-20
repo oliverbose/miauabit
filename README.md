@@ -10,6 +10,8 @@ To preview both editions and test switching between them, run `python3 -m http.s
 
 ## Deploy to Strato
 
+The footer links to a brief Impressum and hosting privacy information in each language. The notices reflect the site's exclusively personal and family use. Review the privacy information if the audience or hosting setup changes. The GDPR household exception depends on who can access the site. [Guidance from the Lower Saxony data protection authority](https://www.lfd.niedersachsen.de/faq/website_betreiber/faq-webseiten-datenschutzkonform-betreiben-166238.html)
+
 The production folders include `index.html` and all of the assets that edition uses. Upload those folders to Strato webspace over SFTP. Under **Domains verwalten → Umleitung einrichten**, assign each domain to its corresponding folder using an internal destination.
 
 | Domain | Language | Local build output | Internal destination |

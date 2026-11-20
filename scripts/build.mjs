@@ -1,7 +1,7 @@
 import { cp, mkdir, writeFile } from 'node:fs/promises';
 import { languages, stops } from './content.mjs';
 import { legalCopy } from './legal.mjs';
-import { photos } from './photos.mjs';
+import { photosByLocation, postcardPhotos } from './photos.mjs';
 
 const escape = (value) => value.replace(/[&<>"']/g, (char) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -9,6 +9,10 @@ const escape = (value) => value.replace(/[&<>"']/g, (char) => ({
 
 const paw = '<span class="paw" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></span>';
 const start = 'petworth';
+const cats = [['jacques', 'Jacques'], ['xena', 'Xena']];
+const albumStops = stops.filter(({id}) => photosByLocation[id]?.length);
+const photos = albumStops.flatMap(({id}) => photosByLocation[id]);
+const photoIndexes = new Map(photos.map(([filename], index) => [filename, index]));
 
 function footer(lang, siteLine) {
   const legal = legalCopy[lang];
@@ -70,10 +74,30 @@ function render(lang, copy, preview = false) {
   const other = 'https://' + copy.other + '/';
   const switchTo = preview ? '../' + otherLang + '/' : other;
   const altIndex = lang === 'en' ? 1 : 2;
-  const cover = photos.find((photo) => photo[3] === start);
   const views = ['atlantic', 'usa', 'berlin'];
-  const photo = ([filename, ...details], loading = 'lazy') =>
-    '<img src="assets/photos/' + filename + '" alt="' + escape(details[altIndex - 1]) + '" loading="' + loading + '">';
+  const photo = (entry) =>
+    '<img src="assets/photos/' + entry[0] + '" alt="' + escape(entry[altIndex]) + '" loading="lazy" decoding="async">';
+  const photoLink = (entry) =>
+    `<a href="assets/photos/${entry[0]}" data-photo="${photoIndexes.get(entry[0])}">${photo(entry)}</a>`;
+  const renderStation = ({id, [lang]: [name, date]}, index) =>
+    `<li class="timeline-stop" style="--route-row:${Math.floor(index / 2) + 1}">
+      <a href="#${id}" data-stop="${id}"${id === start ? ' aria-current="step"' : ''}>
+        <span>${escape(name)}</span><small>${escape(date.split(' · ')[0])}</small>
+      </a>
+    </li>`;
+  const renderPostcard = ({id, [lang]: [name, date, heading, body]}) => {
+    const entry = photos[photoIndexes.get(postcardPhotos[id])];
+    return `<article class="postcard" id="${id}" data-chapter tabindex="-1" aria-labelledby="${id}-heading">
+        ${id === 'petworth' ? `<p class="postcard-meet">${escape(copy.meet)}</p>` : ''}
+        <p class="postmark">${escape(name)} · ${escape(date)}</p>
+        <h2 id="${id}-heading">${escape(heading)}</h2>
+        ${entry ? `<figure class="postcard-photo">
+          ${photoLink(entry)}
+          <figcaption>${copy.photoNote}</figcaption>
+        </figure>` : ''}
+        <p class="postcard-body">${escape(body)}</p>
+      </article>`;
+  };
   return `<!doctype html>
 <html lang="${lang}">
 <head>
@@ -112,37 +136,49 @@ function render(lang, copy, preview = false) {
         </div>
         <button class="play" type="button" data-play hidden><span aria-hidden="true">▶</span> <span data-play-label>${copy.play}</span></button>
       </div>
-      <div class="map" data-map data-view-name="atlantic">
-        <div class="map-art" aria-hidden="true"></div>
-        <canvas class="map-drawing" width="1000" height="500" aria-hidden="true"></canvas>
-        <div class="map-pawprints" aria-hidden="true"></div>
-        <template id="map-pawprint">${paw}</template>
-        <div class="pins"></div>
-        <span class="map-note">${copy.distant}</span>
+      <div class="map-board" data-map-board>
+        <div class="map" data-map data-view-name="atlantic">
+          <div class="map-art" aria-hidden="true"></div>
+          <canvas class="map-drawing" width="1000" height="500" aria-hidden="true"></canvas>
+          <div class="map-pawprints" aria-hidden="true"></div>
+          <template id="map-pawprint">${paw}</template>
+          <div class="pins"></div>
+          <span class="map-note">${copy.distant}</span>
+        </div>
+        <div class="postcard-overlay" data-postcards>
+          ${stops.map(renderPostcard).join('')}
+          <button class="postcard-close" type="button" data-close-postcard aria-label="${copy.closePostcard}" hidden>×</button>
+        </div>
       </div>
-      <nav class="timeline" aria-label="${copy.timeline}">
-        <ol>${stops.map(({id, [lang]: [name, date]}) =>
-          `<li><a href="#${id}" data-stop="${id}"${id === start ? ' aria-current="step"' : ''}><span>${escape(name)}</span><small>${escape(date.split(' · ')[0])}</small></a></li>`).join('')}</ol>
-      </nav>
-    </div>
-    <div class="story-column">
-      <div class="postcard" aria-live="polite">
-        <figure class="postcard-photo" ${cover ? '' : 'hidden'}>
-          <button type="button" data-open-photo>${cover ? photo(cover, 'eager') : ''}</button>
-          <figcaption>${copy.photoNote}</figcaption>
-        </figure>
-        ${stops.map(({id, [lang]: [name,date,heading,body]}) => `
-        <article id="${id}" data-chapter>
-          <p class="postmark">${escape(name)} <span>·</span> ${escape(date)}</p>
-          <h2>${escape(heading)}</h2><p>${escape(body)}</p>
-        </article>`).join('')}
-        <div class="story-controls" hidden><button type="button" data-step="-1">${copy.previous}</button><button type="button" data-step="1">${copy.next}</button></div>
+      <div class="story-controls" hidden>
+        <button type="button" data-step="-1">${copy.previous}</button>
+        <output data-current-stop></output>
+        <button type="button" data-step="1">${copy.next}</button>
       </div>
     </div>
+    <section class="timeline" aria-labelledby="timeline-heading">
+      <h2 id="timeline-heading">${escape(copy.timeline)}</h2>
+      <div class="timeline-path">
+        <div class="timeline-branches">
+          ${cats.map(([cat, name]) => `<div class="timeline-branch" data-cat="${cat}">
+            <p class="timeline-cat" id="timeline-${cat}">${name}</p>
+            <ol class="timeline-stops" role="list" aria-labelledby="timeline-${cat}">${stops.filter((stop) => stop.cat === cat).map(renderStation).join('')}</ol>
+          </div>`).join('')}
+        </div>
+        <div class="timeline-join" aria-hidden="true"></div>
+        <ol class="timeline-stops timeline-shared" role="list" aria-label="Jacques &amp; Xena">${stops.filter((stop) => !stop.cat).map(renderStation).join('')}</ol>
+      </div>
+    </section>
   </section>
   ${photos.length ? `<section class="album" aria-labelledby="album-heading">
     <header><h2 id="album-heading">${copy.gallery}</h2><p>${escape(copy.cast).replace('\n','<br>')}</p></header>
-    <div class="album-grid">${photos.map((entry, index) => `<a href="assets/photos/${entry[0]}" data-photo="${index}">${photo(entry)}</a>`).join('')}</div>
+    <nav class="album-locations" aria-label="${copy.albumLocations}">
+      ${albumStops.map(({id, [lang]: [name]}) => `<a href="#album-${id}">${escape(name)}</a>`).join('')}
+    </nav>
+    ${albumStops.map(({id, [lang]: [name]}) => `<section class="album-location" aria-labelledby="album-${id}">
+      <h3 id="album-${id}">${escape(name)}</h3>
+      <div class="album-grid">${photosByLocation[id].map(photoLink).join('')}</div>
+    </section>`).join('')}
   </section>
   <dialog aria-label="${copy.gallery}" class="lightbox">
     <form method="dialog"><button type="submit" aria-label="${copy.close}">×</button></form>
@@ -152,8 +188,8 @@ function render(lang, copy, preview = false) {
 </main>
 ${footer(lang, copy.siteLine)}
 <script type="application/json" id="journey-data">${JSON.stringify({
-  copy, photos: photos.map((entry) => [entry[0], entry[altIndex], entry[3] ?? null]),
-  chapters: stops.map(({id, view, [lang]: [name]}) => ({id, view, name})),
+  copy, photos: photos.map((entry) => [entry[0], entry[altIndex]]),
+  chapters: stops.map(({id, view, cat, [lang]: [name]}) => ({id, view, cat, name})),
   start,
 }).replaceAll('<','\\u003c')}</script>
 </body>

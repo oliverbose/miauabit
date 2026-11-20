@@ -1,12 +1,16 @@
 const { copy, chapters, photos, start } = JSON.parse(document.querySelector('#journey-data').textContent);
 const map = document.querySelector('[data-map]');
+const mapBoard = document.querySelector('[data-map-board]');
 const pins = map.querySelector('.pins');
 const pawprints = map.querySelector('.map-pawprints');
 const pawprint = document.querySelector('#map-pawprint').content.firstElementChild;
 const canvas = map.querySelector('canvas');
 const ink = canvas.getContext('2d');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const chapterArticles = [...document.querySelectorAll('[data-chapter]')];
+const postcards = document.querySelector('[data-postcards]');
+const chapterArticles = [...postcards.querySelectorAll('[data-chapter]')];
+const closePostcardButton = postcards.querySelector('[data-close-postcard]');
+const stationLinks = [...document.querySelectorAll('.timeline [data-stop]')];
 const currentStop = document.querySelector('[data-current-stop]');
 const viewButtons = [...document.querySelectorAll('[data-view]')];
 const playButton = document.querySelector('[data-play]');
@@ -44,6 +48,7 @@ let player = 'idle';
 let tourTimer;
 let flightFrame;
 let flightProgress;
+let postcardOrigin;
 
 const point = ([x, y]) => [x * 10, y * 5];
 const chapterIndex = (id) => chapters.findIndex((chapter) => chapter.id === id);
@@ -184,6 +189,8 @@ function renderMap(nextView) {
   map.dataset.viewName = view;
   for (const button of viewButtons) button.setAttribute('aria-pressed', button.dataset.view === view);
   const activeId = chapters[selected].id;
+  const activeX = positions[view][activeId]?.[0] ?? 0;
+  mapBoard.dataset.postcardSide = activeX < 50 ? 'right' : 'left';
   const currentPins = new Map([...pins.children].map((pin) => [pin.dataset.stop, pin]));
   for (const [id, [x, y, placement]] of Object.entries(positions[view])) {
     const pin = currentPins.get(id) ?? document.createElement('a');
@@ -257,7 +264,7 @@ function runFlight() {
   flightFrame = requestAnimationFrame(frame);
 }
 
-function select(index, { updateUrl = true, keepView = false } = {}) {
+function select(index, { updateUrl = true, keepView = false, openPostcard = true } = {}) {
   if (index < 0 || index >= chapters.length) return;
   const previousIndex = selected;
   selected = index;
@@ -265,10 +272,14 @@ function select(index, { updateUrl = true, keepView = false } = {}) {
   cancelAnimationFrame(flightFrame);
   flightProgress = undefined;
   for (const article of chapterArticles) {
-    const active = article.id === chapter.id;
-    const link = article.querySelector('[data-stop]');
+    const active = openPostcard && article.id === chapter.id;
+    article.hidden = !active;
     article.toggleAttribute('data-active', active);
-    if (active) link.setAttribute('aria-current', 'step');
+  }
+  postcards.hidden = !openPostcard;
+  mapBoard.toggleAttribute('data-postcard-open', openPostcard);
+  for (const link of stationLinks) {
+    if (link.dataset.stop === chapter.id) link.setAttribute('aria-current', 'step');
     else link.removeAttribute('aria-current');
   }
   currentStop.value = chapter.name;
@@ -283,6 +294,25 @@ function select(index, { updateUrl = true, keepView = false } = {}) {
     animatePawprints(previousChapter.id, chapter.id);
   }
   if (chapter.id === 'flight' && view === 'atlantic') runFlight();
+}
+
+function showMapBoard() {
+  const bounds = mapBoard.getBoundingClientRect();
+  if (bounds.top < 0 || bounds.bottom > window.innerHeight) {
+    mapBoard.scrollIntoView({block: 'start', behavior: reducedMotion.matches ? 'instant' : 'smooth'});
+  }
+}
+
+function closePostcard() {
+  setPlayer('idle');
+  postcards.hidden = true;
+  mapBoard.removeAttribute('data-postcard-open');
+  const activeId = chapters[selected].id;
+  const returnTo = postcardOrigin?.isConnected && !postcardOrigin.disabled
+    ? postcardOrigin
+    : pins.querySelector('[data-active]') ?? stationLinks.find((link) => link.dataset.stop === activeId);
+  returnTo?.focus();
+  postcardOrigin = undefined;
 }
 
 function setPlayer(state) {
@@ -310,7 +340,9 @@ playButton.addEventListener('click', () => {
   }
   const restart = player !== 'paused';
   setPlayer('playing');
+  postcardOrigin = playButton;
   if (restart) select(0, {updateUrl: false});
+  showMapBoard();
   scheduleNext();
 });
 
@@ -329,26 +361,37 @@ document.addEventListener('click', (event) => {
   event.preventDefault();
   const id = link.dataset.stop;
   setPlayer('idle');
+  postcardOrigin = link;
   select(chapterIndex(id));
-  if (!link.closest('.postcard')) {
-    const article = document.getElementById(id);
-    article.focus({preventScroll: true});
-    article.scrollIntoView({block: 'start', behavior: reducedMotion.matches ? 'instant' : 'smooth'});
-  }
+  document.getElementById(id).focus({preventScroll: true});
+  showMapBoard();
+});
+
+closePostcardButton.addEventListener('click', closePostcard);
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape' || postcards.hidden || document.querySelector('.lightbox[open]')) return;
+  closePostcard();
 });
 
 for (const button of steps) {
   button.addEventListener('click', () => {
     setPlayer('idle');
+    postcardOrigin = button;
     select(selected + Number(button.dataset.step));
     if (button.disabled) steps.find((step) => !step.disabled).focus();
+    showMapBoard();
   });
 }
 
 function restoreChapter() {
   setPlayer('idle');
+  postcardOrigin = undefined;
   const index = chapterIndex(location.hash.slice(1));
-  select(index >= 0 ? index : chapterIndex(start), {updateUrl: false, keepView: index < 0 && view === 'atlantic'});
+  select(index >= 0 ? index : chapterIndex(start), {
+    updateUrl: false,
+    keepView: index < 0 && view === 'atlantic',
+    openPostcard: index >= 0,
+  });
 }
 window.addEventListener('popstate', restoreChapter);
 window.addEventListener('hashchange', () => {
@@ -392,6 +435,7 @@ if (dialog && typeof dialog.showModal === 'function') {
   });
 }
 restoreChapter();
+closePostcardButton.hidden = false;
 playButton.hidden = false;
 document.querySelector('.views').hidden = false;
 document.querySelector('.story-controls').hidden = false;

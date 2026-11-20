@@ -19,24 +19,25 @@ function render(lang, copy, preview = false) {
   const views = ['atlantic', 'usa', 'berlin'];
   const photo = (entry) =>
     '<img src="assets/photos/' + entry[0] + '" alt="' + escape(entry[altIndex]) + '" loading="lazy">';
-  const renderStop = ({id, [lang]: [name, date, heading, body]}) => {
+  const renderStation = ({id, [lang]: [name, date]}, index) =>
+    `<li class="timeline-stop" style="--route-row:${Math.floor(index / 2) + 1}">
+      <a href="#${id}" data-stop="${id}"${id === start ? ' aria-current="step"' : ''}>
+        <span>${escape(name)}</span><small>${escape(date.split(' · ')[0])}</small>
+      </a>
+    </li>`;
+  const renderPostcard = ({id, [lang]: [name, date, heading, body]}) => {
     const photoIndex = photos.findIndex((entry) => entry[3] === id);
     const entry = photos[photoIndex];
-    const current = id === start;
-    return `<li class="timeline-stop">
-      <article class="postcard" id="${id}" data-chapter${current ? ' data-active' : ''} tabindex="-1" aria-labelledby="${id}-heading">
-        <div class="postcard-copy">
-          ${id === 'petworth' ? `<p class="timeline-meet">${escape(copy.meet)}</p>` : ''}
-          <p class="postmark"><a href="#${id}" data-stop="${id}"${current ? ' aria-current="step"' : ''}>${escape(name)}</a> <span>·</span> ${escape(date)}</p>
-          <h3 id="${id}-heading">${escape(heading)}</h3>
-          <p>${escape(body)}</p>
-        </div>
+    return `<article class="postcard" id="${id}" data-chapter tabindex="-1" aria-labelledby="${id}-heading">
+        ${id === 'petworth' ? `<p class="postcard-meet">${escape(copy.meet)}</p>` : ''}
+        <p class="postmark">${escape(name)} · ${escape(date)}</p>
+        <h2 id="${id}-heading">${escape(heading)}</h2>
         ${entry ? `<figure class="postcard-photo">
           <a href="assets/photos/${entry[0]}" data-photo="${photoIndex}">${photo(entry)}</a>
           <figcaption>${copy.photoNote}</figcaption>
         </figure>` : ''}
-      </article>
-    </li>`;
+        <p class="postcard-body">${escape(body)}</p>
+      </article>`;
   };
   return `<!doctype html>
 <html lang="${lang}">
@@ -76,13 +77,19 @@ function render(lang, copy, preview = false) {
         </div>
         <button class="play" type="button" data-play hidden><span aria-hidden="true">▶</span> <span data-play-label>${copy.play}</span></button>
       </div>
-      <div class="map" data-map data-view-name="atlantic">
-        <div class="map-art" aria-hidden="true"></div>
-        <canvas class="map-drawing" width="1000" height="500" aria-hidden="true"></canvas>
-        <div class="map-pawprints" aria-hidden="true"></div>
-        <template id="map-pawprint">${paw}</template>
-        <div class="pins"></div>
-        <span class="map-note">${copy.distant}</span>
+      <div class="map-board" data-map-board>
+        <div class="map" data-map data-view-name="atlantic">
+          <div class="map-art" aria-hidden="true"></div>
+          <canvas class="map-drawing" width="1000" height="500" aria-hidden="true"></canvas>
+          <div class="map-pawprints" aria-hidden="true"></div>
+          <template id="map-pawprint">${paw}</template>
+          <div class="pins"></div>
+          <span class="map-note">${copy.distant}</span>
+        </div>
+        <div class="postcard-overlay" data-postcards>
+          ${stops.map(renderPostcard).join('')}
+          <button class="postcard-close" type="button" data-close-postcard aria-label="${copy.closePostcard}" hidden>×</button>
+        </div>
       </div>
       <div class="story-controls" hidden>
         <button type="button" data-step="-1">${copy.previous}</button>
@@ -92,14 +99,16 @@ function render(lang, copy, preview = false) {
     </div>
     <section class="timeline" aria-labelledby="timeline-heading">
       <h2 id="timeline-heading">${escape(copy.timeline)}</h2>
-      <div class="timeline-branches">
-        ${cats.map(([cat, name]) => `<div class="timeline-branch" data-cat="${cat}">
-          <p class="timeline-cat" id="timeline-${cat}">${name}</p>
-          <ol class="timeline-stops" aria-labelledby="timeline-${cat}">${stops.filter((stop) => stop.cat === cat).map(renderStop).join('')}</ol>
-        </div>`).join('')}
+      <div class="timeline-path">
+        <div class="timeline-branches">
+          ${cats.map(([cat, name]) => `<div class="timeline-branch" data-cat="${cat}">
+            <p class="timeline-cat" id="timeline-${cat}">${name}</p>
+            <ol class="timeline-stops" role="list" aria-labelledby="timeline-${cat}">${stops.filter((stop) => stop.cat === cat).map(renderStation).join('')}</ol>
+          </div>`).join('')}
+        </div>
+        <div class="timeline-join" aria-hidden="true"></div>
+        <ol class="timeline-stops timeline-shared" role="list" aria-label="Jacques &amp; Xena">${stops.filter((stop) => !stop.cat).map(renderStation).join('')}</ol>
       </div>
-      <div class="timeline-join" aria-hidden="true"></div>
-      <ol class="timeline-stops timeline-shared" aria-label="Jacques &amp; Xena">${stops.filter((stop) => !stop.cat).map(renderStop).join('')}</ol>
     </section>
   </section>
   ${photos.length ? `<section class="album" aria-labelledby="album-heading">

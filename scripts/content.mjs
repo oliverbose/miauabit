@@ -6,7 +6,7 @@ export const languages = {
     nextStop: 'Next stop', planned: 'Early 2027 · Planned', skip: 'Skip to the journey',
     map: 'Journey map', atlantic: 'Atlantic', usa: 'US East Coast', berlin: 'Berlin',
     ocean: 'NORTH ATLANTIC', play: 'Play journey', pause: 'Pause journey', replay: 'Replay journey',
-    previous: 'Previous stop', next: 'Next stop', timeline: 'Journey timeline', gallery: 'From the photo album',
+    previous: 'Previous stop', next: 'Next stop', timeline: 'Journey timeline', meet: 'Their paths meet', gallery: 'From the photo album',
     previousPhoto: 'Previous photo', nextPhoto: 'Next photo', close: 'Close photo',
     photoNote: 'From the family album', cast: 'Jacques, 14 · Tuxedo\nXena, 8 · Brown tabby',
     distant: 'Schematic map', home: 'Home base', sideTrip: 'Side trip', siteLine: 'A family travelogue, told in pawprints.',
@@ -18,7 +18,7 @@ export const languages = {
     nextStop: 'Nächster Halt', planned: 'Anfang 2027 · Geplant', skip: 'Zur Reise springen',
     map: 'Karte der Reise', atlantic: 'Atlantik', usa: 'US-Ostküste', berlin: 'Berlin',
     ocean: 'NORDATLANTIK', play: 'Reise abspielen', pause: 'Reise pausieren', replay: 'Reise erneut abspielen',
-    previous: 'Vorheriger Halt', next: 'Nächster Halt', timeline: 'Stationen der Reise', gallery: 'Aus dem Fotoalbum',
+    previous: 'Vorheriger Halt', next: 'Nächster Halt', timeline: 'Stationen der Reise', meet: 'Hier treffen sich ihre Wege', gallery: 'Aus dem Fotoalbum',
     previousPhoto: 'Vorheriges Foto', nextPhoto: 'Nächstes Foto', close: 'Foto schließen',
     photoNote: 'Aus dem Familienalbum', cast: 'Jacques, 14 · Schwarz-weiß\nXena, 8 · Braun getigert',
     distant: 'Schematische Karte', home: 'Zuhause', sideTrip: 'Ausflug', siteLine: 'Eine Familienreise auf vier Pfoten. Na gut, auf acht.',
@@ -27,17 +27,17 @@ export const languages = {
 
 export const stops = [
   {
-    id: 'jacques', view: 'usa',
+    id: 'jacques', view: 'usa', cat: 'jacques',
     en: ['Takoma', 'January 2018', 'The case of the mystery meow', 'Jacques’s first five years are a mystery. The Washington D.C. Humane Society knew he’d been found in an apartment hallway. His new family adopted him in January 2018. He always meowed through Takoma on car rides, so naturally the family declared it the scene of the crime. Evidence? One very vocal witness.'],
     de: ['Takoma', 'Januar 2018', 'Der Fall des rätselhaften Miauens', 'Jacques’ erste fünf Jahre sind ein Rätsel. Das Tierheim der Washington D.C. Humane Society wusste nur, dass man ihn in einem Hausflur gefunden hatte. Im Januar 2018 zog er zu seiner neuen Familie. Bei Autofahrten durch Takoma miaute er immer so laut, dass die Familie den Ort kurzerhand zum Fundort erklärte. Beweislage? Ein sehr gesprächiger Zeuge.'],
   },
   {
-    id: 'north-carolina', view: 'usa',
+    id: 'north-carolina', view: 'usa', cat: 'xena',
     en: ['North Carolina', '2018', 'Small cat, big weather', 'Xena was born in North Carolina and rescued after a hurricane. She made her way to a foster family in Bethesda, Maryland. The rest of the household had no idea what was coming.'],
     de: ['North Carolina', '2018', 'Kleine Katze, großer Sturm', 'Xena kam in North Carolina zur Welt und wurde nach einem Hurrikan gerettet. So kam sie zu einer Pflegefamilie in Bethesda, Maryland. Der Rest der Familie ahnte noch nicht, wer da bald einziehen würde.'],
   },
   {
-    id: 'bethesda', view: 'usa',
+    id: 'bethesda', view: 'usa', cat: 'xena',
     en: ['Bethesda', 'Fall 2018', 'Enter Xena', 'At five months old, Xena left her foster family in Bethesda and moved to Petworth. Jacques had already claimed his favorite spots. Xena was happy to inspect them all.'],
     de: ['Bethesda', 'Herbst 2018', 'Auftritt Xena', 'Mit fünf Monaten zog Xena von ihrer Pflegefamilie in Bethesda nach Petworth. Jacques hatte seine Lieblingsplätze längst besetzt. Xena nahm sie alle gründlich in Augenschein.'],
   },

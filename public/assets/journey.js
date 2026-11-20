@@ -7,13 +7,10 @@ const canvas = map.querySelector('canvas');
 const ink = canvas.getContext('2d');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const chapterArticles = [...document.querySelectorAll('[data-chapter]')];
-const timeline = document.querySelector('.timeline ol');
+const currentStop = document.querySelector('[data-current-stop]');
 const viewButtons = [...document.querySelectorAll('[data-view]')];
 const playButton = document.querySelector('[data-play]');
 const playLabel = playButton.querySelector('[data-play-label]');
-const postcardPhoto = document.querySelector('.postcard-photo');
-const postcardButton = postcardPhoto.querySelector('[data-open-photo]');
-const postcardImage = postcardButton.querySelector('img') ?? document.createElement('img');
 const languageLink = document.querySelector('[data-language]');
 const baseLanguageUrl = languageLink.href;
 const steps = [...document.querySelectorAll('[data-step]')];
@@ -47,7 +44,6 @@ let player = 'idle';
 let tourTimer;
 let flightFrame;
 let flightProgress;
-let postcardPhotoIndex = -1;
 
 const point = ([x, y]) => [x * 10, y * 5];
 const chapterIndex = (id) => chapters.findIndex((chapter) => chapter.id === id);
@@ -268,35 +264,23 @@ function select(index, { updateUrl = true, keepView = false } = {}) {
   const chapter = chapters[index];
   cancelAnimationFrame(flightFrame);
   flightProgress = undefined;
-  for (const article of chapterArticles) article.hidden = article.id !== chapter.id;
-  for (const link of timeline.querySelectorAll('[data-stop]')) {
-    if (link.dataset.stop === chapter.id) {
-      link.setAttribute('aria-current', 'step');
-      if (timeline.scrollWidth > timeline.clientWidth) {
-        const linkBox = link.getBoundingClientRect();
-        const listBox = timeline.getBoundingClientRect();
-        if (linkBox.left < listBox.left || linkBox.right > listBox.right) {
-          timeline.scrollLeft += linkBox.left - listBox.left - 5;
-        }
-      }
-    } else link.removeAttribute('aria-current');
+  for (const article of chapterArticles) {
+    const active = article.id === chapter.id;
+    const link = article.querySelector('[data-stop]');
+    article.toggleAttribute('data-active', active);
+    if (active) link.setAttribute('aria-current', 'step');
+    else link.removeAttribute('aria-current');
   }
-  postcardPhotoIndex = photos.findIndex((photo) => photo[2] === chapter.id);
-  postcardPhoto.hidden = postcardPhotoIndex < 0;
-  if (postcardPhotoIndex >= 0) {
-    const [file, alt] = photos[postcardPhotoIndex];
-    postcardImage.src = 'assets/photos/' + file;
-    postcardImage.alt = alt;
-    if (!postcardImage.isConnected) postcardButton.append(postcardImage);
-  }
+  currentStop.value = chapter.name;
   steps[0].disabled = index === 0;
   steps[1].disabled = index === chapters.length - 1;
   const hash = '#' + chapter.id;
   if (updateUrl && location.hash !== hash) history.pushState(null, '', hash);
   languageLink.href = baseLanguageUrl + hash;
   renderMap(keepView ? view : chapter.view);
-  if (previousIndex >= 0 && index > previousIndex) {
-    animatePawprints(chapters[previousIndex].id, chapter.id);
+  const previousChapter = chapters[previousIndex];
+  if (previousChapter && index > previousIndex && (!chapter.cat || chapter.cat === previousChapter.cat)) {
+    animatePawprints(previousChapter.id, chapter.id);
   }
   if (chapter.id === 'flight' && view === 'atlantic') runFlight();
 }
@@ -343,15 +327,13 @@ document.addEventListener('click', (event) => {
   const link = event.target.closest('a[data-stop]');
   if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   event.preventDefault();
-  const wasMapPin = link.classList.contains('pin');
-  const hadFocus = document.activeElement === link;
+  const id = link.dataset.stop;
   setPlayer('idle');
-  select(chapterIndex(link.dataset.stop));
-  if (wasMapPin && hadFocus && !link.isConnected) {
-    pins.querySelector('[data-active]')?.focus({preventScroll:true});
-  }
-  if (matchMedia('(max-width: 680px)').matches) {
-    document.querySelector('.postcard').scrollIntoView({block:'nearest', behavior:reducedMotion.matches ? 'instant' : 'smooth'});
+  select(chapterIndex(id));
+  if (!link.closest('.postcard')) {
+    const article = document.getElementById(id);
+    article.focus({preventScroll: true});
+    article.scrollIntoView({block: 'start', behavior: reducedMotion.matches ? 'instant' : 'smooth'});
   }
 });
 
@@ -394,7 +376,6 @@ if (dialog && typeof dialog.showModal === 'function') {
       showPhoto(Number(link.dataset.photo));
     });
   }
-  postcardButton.addEventListener('click', () => showPhoto(postcardPhotoIndex));
   for (const button of dialog.querySelectorAll('[data-photo-step]')) {
     button.addEventListener('click', () => showPhoto(photoIndex + Number(button.dataset.photoStep)));
   }

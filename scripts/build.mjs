@@ -8,6 +8,7 @@ const escape = (value) => value.replace(/[&<>"']/g, (char) => ({
 
 const paw = '<span class="paw" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></span>';
 const start = 'petworth';
+const cats = [['jacques', 'Jacques'], ['xena', 'Xena']];
 
 function render(lang, copy, preview = false) {
   const otherLang = lang === 'de' ? 'en' : 'de';
@@ -15,10 +16,28 @@ function render(lang, copy, preview = false) {
   const other = 'https://' + copy.other + '/';
   const switchTo = preview ? '../' + otherLang + '/' : other;
   const altIndex = lang === 'en' ? 1 : 2;
-  const cover = photos.find((photo) => photo[3] === start);
   const views = ['atlantic', 'usa', 'berlin'];
-  const photo = ([filename, ...details], loading = 'lazy') =>
-    '<img src="assets/photos/' + filename + '" alt="' + escape(details[altIndex - 1]) + '" loading="' + loading + '">';
+  const photo = (entry) =>
+    '<img src="assets/photos/' + entry[0] + '" alt="' + escape(entry[altIndex]) + '" loading="lazy">';
+  const renderStop = ({id, [lang]: [name, date, heading, body]}) => {
+    const photoIndex = photos.findIndex((entry) => entry[3] === id);
+    const entry = photos[photoIndex];
+    const current = id === start;
+    return `<li class="timeline-stop">
+      <article class="postcard" id="${id}" data-chapter${current ? ' data-active' : ''} tabindex="-1" aria-labelledby="${id}-heading">
+        <div class="postcard-copy">
+          ${id === 'petworth' ? `<p class="timeline-meet">${escape(copy.meet)}</p>` : ''}
+          <p class="postmark"><a href="#${id}" data-stop="${id}"${current ? ' aria-current="step"' : ''}>${escape(name)}</a> <span>·</span> ${escape(date)}</p>
+          <h3 id="${id}-heading">${escape(heading)}</h3>
+          <p>${escape(body)}</p>
+        </div>
+        ${entry ? `<figure class="postcard-photo">
+          <a href="assets/photos/${entry[0]}" data-photo="${photoIndex}">${photo(entry)}</a>
+          <figcaption>${copy.photoNote}</figcaption>
+        </figure>` : ''}
+      </article>
+    </li>`;
+  };
   return `<!doctype html>
 <html lang="${lang}">
 <head>
@@ -65,25 +84,23 @@ function render(lang, copy, preview = false) {
         <div class="pins"></div>
         <span class="map-note">${copy.distant}</span>
       </div>
-      <nav class="timeline" aria-label="${copy.timeline}">
-        <ol>${stops.map(({id, [lang]: [name, date]}) =>
-          `<li><a href="#${id}" data-stop="${id}"${id === start ? ' aria-current="step"' : ''}><span>${escape(name)}</span><small>${escape(date.split(' · ')[0])}</small></a></li>`).join('')}</ol>
-      </nav>
-    </div>
-    <div class="story-column">
-      <div class="postcard" aria-live="polite">
-        <figure class="postcard-photo" ${cover ? '' : 'hidden'}>
-          <button type="button" data-open-photo>${cover ? photo(cover, 'eager') : ''}</button>
-          <figcaption>${copy.photoNote}</figcaption>
-        </figure>
-        ${stops.map(({id, [lang]: [name,date,heading,body]}) => `
-        <article id="${id}" data-chapter>
-          <p class="postmark">${escape(name)} <span>·</span> ${escape(date)}</p>
-          <h2>${escape(heading)}</h2><p>${escape(body)}</p>
-        </article>`).join('')}
-        <div class="story-controls" hidden><button type="button" data-step="-1">${copy.previous}</button><button type="button" data-step="1">${copy.next}</button></div>
+      <div class="story-controls" hidden>
+        <button type="button" data-step="-1">${copy.previous}</button>
+        <output data-current-stop></output>
+        <button type="button" data-step="1">${copy.next}</button>
       </div>
     </div>
+    <section class="timeline" aria-labelledby="timeline-heading">
+      <h2 id="timeline-heading">${escape(copy.timeline)}</h2>
+      <div class="timeline-branches">
+        ${cats.map(([cat, name]) => `<div class="timeline-branch" data-cat="${cat}">
+          <p class="timeline-cat" id="timeline-${cat}">${name}</p>
+          <ol class="timeline-stops" aria-labelledby="timeline-${cat}">${stops.filter((stop) => stop.cat === cat).map(renderStop).join('')}</ol>
+        </div>`).join('')}
+      </div>
+      <div class="timeline-join" aria-hidden="true"></div>
+      <ol class="timeline-stops timeline-shared" aria-label="Jacques &amp; Xena">${stops.filter((stop) => !stop.cat).map(renderStop).join('')}</ol>
+    </section>
   </section>
   ${photos.length ? `<section class="album" aria-labelledby="album-heading">
     <header><h2 id="album-heading">${copy.gallery}</h2><p>${escape(copy.cast).replace('\n','<br>')}</p></header>
@@ -97,8 +114,8 @@ function render(lang, copy, preview = false) {
 </main>
 <footer class="shell footer">${paw}<span>${copy.siteLine}</span></footer>
 <script type="application/json" id="journey-data">${JSON.stringify({
-  copy, photos: photos.map((entry) => [entry[0], entry[altIndex], entry[3] ?? null]),
-  chapters: stops.map(({id, view, [lang]: [name]}) => ({id, view, name})),
+  copy, photos: photos.map((entry) => [entry[0], entry[altIndex]]),
+  chapters: stops.map(({id, view, cat, [lang]: [name]}) => ({id, view, cat, name})),
   start,
 }).replaceAll('<','\\u003c')}</script>
 </body>

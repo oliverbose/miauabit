@@ -128,7 +128,14 @@ h1 { margin:0; font-size:clamp(2.65rem, 5.35vw, 5.2rem); letter-spacing:-.059em;
 .lightbox img { display:block; max-width:100%; max-height:65dvh; margin:auto; }
 .lightbox figcaption { padding:.55rem 0 .3rem; }
 .lightbox div { display:flex; justify-content:center; gap:1rem; }
-.footer { border-top:1px solid var(--line); display:flex; align-items:center; gap:.5rem; padding: 1rem 0 1.7rem; font-size:.9rem; color:var(--soft-ink); }
+.footer { border-top:1px solid var(--line); display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; padding: 1rem 0 1.7rem; font-size:.9rem; color:var(--soft-ink); }
+.footer-legal { display:flex; flex-wrap:wrap; gap:.4rem 1rem; margin-inline-start:auto; }
+.footer-legal a, .legal-page a { text-underline-offset:.18em; }
+.legal-page { max-width:47rem; padding-block:clamp(2rem, 5vw, 4rem); line-height:1.65; overflow-wrap:anywhere; }
+.legal-page h1 { margin:.6rem 0 1rem; font-size:clamp(2.35rem, 6vw, 4.25rem); line-height:1.05; }
+.legal-page h2 { margin:0 0 .5rem; font-size:1.45rem; line-height:1.2; }
+.legal-page section { margin-top:1.45rem; padding-top:1.2rem; border-top:1px solid var(--line); }
+.legal-page p { margin:0 0 .75rem; }
 @media (max-width: 900px) {
   .journey { grid-template-columns:minmax(0, 1.7fr) minmax(245px, 1fr); gap:14px; }
   .timeline ol { grid-template-columns:repeat(3,minmax(0,1fr)); }

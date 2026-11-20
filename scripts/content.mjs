@@ -9,8 +9,8 @@ export const languages = {
     previous: 'Previous stop', next: 'Next stop', timeline: 'Journey timeline', meet: 'Their paths meet', closePostcard: 'Close postcard', gallery: 'From the photo album',
     albumLocations: 'Album locations',
     previousPhoto: 'Previous photo', nextPhoto: 'Next photo', close: 'Close photo',
-    photoNote: 'From the family album', cast: 'Jacques, 14 · Tuxedo\nXena, 8 · Brown tabby',
-    distant: 'Schematic map', home: 'Home base', sideTrip: 'Side trip', siteLine: 'A family travelogue, told in pawprints.',
+    photoNote: 'From the Can-openers’ album', cast: 'Jacques, 14 · Tuxedo\nXena, 8 · Brown tabby',
+    distant: 'Schematic map', home: 'Home base', sideTrip: 'Side trip', siteLine: 'A travelogue by the Can-openers, told in pawprints.',
   },
   de: {
     brand: 'miauabit', domain: 'miauabit.de', other: 'meowabit.de', otherLanguage: 'English',
@@ -22,26 +22,26 @@ export const languages = {
     previous: 'Vorheriger Halt', next: 'Nächster Halt', timeline: 'Stationen der Reise', meet: 'Hier treffen sich ihre Wege', closePostcard: 'Postkarte schließen', gallery: 'Aus dem Fotoalbum',
     albumLocations: 'Orte im Fotoalbum',
     previousPhoto: 'Vorheriges Foto', nextPhoto: 'Nächstes Foto', close: 'Foto schließen',
-    photoNote: 'Aus dem Familienalbum', cast: 'Jacques, 14 · Schwarz-weiß\nXena, 8 · Braun getigert',
-    distant: 'Schematische Karte', home: 'Zuhause', sideTrip: 'Ausflug', siteLine: 'Eine Familienreise auf vier Pfoten. Na gut, auf acht.',
+    photoNote: 'Aus dem Album der Dosenöffner', cast: 'Jacques, 14 · Schwarz-weiß\nXena, 8 · Braun getigert',
+    distant: 'Schematische Karte', home: 'Zuhause', sideTrip: 'Ausflug', siteLine: 'Die Dosenöffner erzählen von einer Reise auf vier Pfoten. Na gut, auf acht.',
   },
 };
 
 export const stops = [
   {
     id: 'jacques', view: 'usa', cat: 'jacques',
-    en: ['Takoma', 'January 2018', 'The case of the mystery meow', 'Jacques’s first five years are a mystery. The Washington D.C. Humane Society knew he’d been found in an apartment hallway. His new family adopted him in January 2018. He always meowed through Takoma on car rides, so naturally the family declared it the scene of the crime. Evidence? One very vocal witness.'],
-    de: ['Takoma', 'Januar 2018', 'Der Fall des rätselhaften Miauens', 'Jacques’ erste fünf Jahre sind ein Rätsel. Das Tierheim der Washington D.C. Humane Society wusste nur, dass man ihn in einem Hausflur gefunden hatte. Im Januar 2018 zog er zu seiner neuen Familie. Bei Autofahrten durch Takoma miaute er immer so laut, dass die Familie den Ort kurzerhand zum Fundort erklärte. Beweislage? Ein sehr gesprächiger Zeuge.'],
+    en: ['Takoma', 'January 2018', 'The case of the mystery meow', 'Jacques’s first five years are a mystery. The Humane Rescue Alliance in Washington, D.C., knew only that he’d been found in an apartment hallway. His new Can-openers adopted him in January 2018. He always meowed through Takoma on car rides, so naturally the Can-openers declared it the scene of the crime. Evidence? One very vocal witness.'],
+    de: ['Takoma', 'Januar 2018', 'Der Fall des rätselhaften Miauens', 'Jacques’ erste fünf Jahre sind ein Rätsel. Die Humane Rescue Alliance in Washington, D.C., wusste nur, dass man ihn in einem Hausflur gefunden hatte. Im Januar 2018 zog er zu seinen neuen Dosenöffnern. Bei Autofahrten durch Takoma miaute er immer so laut, dass die Dosenöffner den Ort kurzerhand zum Fundort erklärten. Beweislage? Ein sehr gesprächiger Zeuge.'],
   },
   {
     id: 'north-carolina', view: 'usa', cat: 'xena',
-    en: ['North Carolina', '2018', 'Small cat, big weather', 'Xena was born in North Carolina and rescued after a hurricane. She made her way to a foster family in Bethesda, Maryland. The rest of the household had no idea what was coming.'],
-    de: ['North Carolina', '2018', 'Kleine Katze, großer Sturm', 'Xena kam in North Carolina zur Welt und wurde nach einem Hurrikan gerettet. So kam sie zu einer Pflegefamilie in Bethesda, Maryland. Der Rest der Familie ahnte noch nicht, wer da bald einziehen würde.'],
+    en: ['North Carolina', '2018', 'Small cat, big weather', 'Xena was born in North Carolina. Lucky Cats rescued her after a hurricane. For Xena, the name was especially fitting. She made her way to her foster Can-openers in Bethesda, Maryland. Her future Can-openers had no idea what was coming.'],
+    de: ['North Carolina', '2018', 'Kleine Katze, großer Sturm', 'Xena kam in North Carolina zur Welt. Nach einem Hurrikan wurde sie von Lucky Cats gerettet. Für Xena hätte der Name kaum besser passen können. So kam sie vorübergehend zu Dosenöffnern nach Bethesda, Maryland. Ihre künftigen Dosenöffner ahnten noch nicht, wer da bald einziehen würde.'],
   },
   {
     id: 'bethesda', view: 'usa', cat: 'xena',
-    en: ['Bethesda', 'Fall 2018', 'Enter Xena', 'At five months old, Xena left her foster family in Bethesda and moved to Petworth. Jacques had already claimed his favorite spots. Xena was happy to inspect them all.'],
-    de: ['Bethesda', 'Herbst 2018', 'Auftritt Xena', 'Mit fünf Monaten zog Xena von ihrer Pflegefamilie in Bethesda nach Petworth. Jacques hatte seine Lieblingsplätze längst besetzt. Xena nahm sie alle gründlich in Augenschein.'],
+    en: ['Bethesda', 'Fall 2018', 'Enter Xena', 'At five months old, Xena left her foster Can-openers in Bethesda and moved to Petworth. Jacques had already claimed his favorite spots. Xena was happy to inspect them all.'],
+    de: ['Bethesda', 'Herbst 2018', 'Auftritt Xena', 'Mit fünf Monaten verließ Xena ihre Dosenöffner auf Zeit in Bethesda und zog nach Petworth. Jacques hatte seine Lieblingsplätze längst besetzt. Xena nahm sie alle gründlich in Augenschein.'],
   },
   {
     id: 'petworth', view: 'usa',

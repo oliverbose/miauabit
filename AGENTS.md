@@ -8,7 +8,8 @@ Keep this file up to date with project decisions made in chat. Update the curren
 - The chosen design pairs an illustrated, interactive map with postcard stories, animated travel, and real family photos. Offer an Atlantic overview, a US East Coast view, and a Berlin view. The November 2022 crossing animates a plane and the cats traveled in the passenger cabin. Mark the Moabit move as planned for early 2027 until it happens.
 - Jacques’ first five years are unknown. He was adopted from the Washington D.C. Humane Society in January 2018 after being found in an apartment hallway. The family’s Takoma theory is a joke based on his meowing there. Spell the stop **Takoma** in both languages and place its pin and Bethesda’s near Petworth on the schematic map.
 - Xena was rescued after a hurricane in North Carolina and adopted at five months old from a Bethesda foster family in fall 2018. The cats shared Petworth as their home base until November 2022 and settled in Friedrichshain after the flight to Berlin.
-- Use **„Zwei Katzen. Economy-Class.“** on the German flight postcard. Put the photo of both cats on the patterned chair on Brooklyn’s postcard. Petworth’s postcard is text-only.
+- Use **„Zwei Katzen. Economy-Class.“** on the German flight postcard. Put the photo of both cats on the patterned chair on Brooklyn’s postcard.
+- Use `IMG_20200610_124813.jpg` for Takoma, `IMG_20190505_124302.jpg` for Petworth, and an animated GIF from `My Movie.mp4` for Vermont. These source files are in `~/Downloads/miauabit`. The Vermont GIF loops continuously, including in the postcard thumbnail.
 - Use the curated family album photos featuring the cats without people. Favor playful moments and unusual places. The initial site used 12 photos.
 
 ## Local preview

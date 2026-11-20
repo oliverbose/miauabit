@@ -11,6 +11,7 @@ Keep this file up to date with project decisions made in chat. Update the curren
 - Use **„Zwei Katzen. Economy-Class.“** on the German flight postcard. Put the photo of both cats on the patterned chair on Brooklyn’s postcard.
 - Use `IMG_20200610_124813.jpg` for Takoma, `IMG_20190505_124302.jpg` for Petworth, and an animated GIF from `My Movie.mp4` for Vermont. These source files are in `~/Downloads/miauabit`. The Vermont GIF loops continuously, including in the postcard thumbnail.
 - Use the curated family album photos featuring the cats without people. Favor playful moments and unusual places. The initial site used 12 photos.
+- Group the full album by map stop. Include the screened-window photo `PXL_20220820_183536200.jpg` under Vermont. Keep postcard photo assignments independent of album groups. Crop out people where needed and omit source metadata from exports.
 
 ## Local preview
 

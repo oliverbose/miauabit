@@ -23,4 +23,4 @@ After setting up both domains, open each HTTPS homepage and switch languages fro
 
 Edit the German and English stories in [scripts/content.mjs](scripts/content.mjs). The opening stamp and the Moabit postcard both carry the planned move date. Update both when the move happens, rebuild, and upload both editions.
 
-The photo catalog is [scripts/photos.mjs](scripts/photos.mjs). Media in `public/assets/photos/` comes from the selected Miauabit album. Stills are resized WebP files, and the Vermont clip is an animated GIF. The exports omit source metadata. Media assigned to a postcard appears with a family-album caption. The gallery includes every item in the catalog.
+The photo catalog is [scripts/photos.mjs](scripts/photos.mjs). Media in `public/assets/photos/` comes from the selected Miauabit album. Stills are resized WebP files, and the Vermont clip is an animated GIF. The exports omit source metadata. The gallery groups media by stop on the map. Postcard assignments are listed separately in the catalog.

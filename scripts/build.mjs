@@ -1,6 +1,6 @@
 import { cp, mkdir, writeFile } from 'node:fs/promises';
 import { languages, stops } from './content.mjs';
-import { photos } from './photos.mjs';
+import { photosByLocation, postcardPhotos } from './photos.mjs';
 
 const escape = (value) => value.replace(/[&<>"']/g, (char) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -9,6 +9,9 @@ const escape = (value) => value.replace(/[&<>"']/g, (char) => ({
 const paw = '<span class="paw" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></span>';
 const start = 'petworth';
 const cats = [['jacques', 'Jacques'], ['xena', 'Xena']];
+const albumStops = stops.filter(({id}) => photosByLocation[id]?.length);
+const photos = albumStops.flatMap(({id}) => photosByLocation[id]);
+const photoIndexes = new Map(photos.map(([filename], index) => [filename, index]));
 
 function render(lang, copy, preview = false) {
   const otherLang = lang === 'de' ? 'en' : 'de';
@@ -18,7 +21,9 @@ function render(lang, copy, preview = false) {
   const altIndex = lang === 'en' ? 1 : 2;
   const views = ['atlantic', 'usa', 'berlin'];
   const photo = (entry) =>
-    '<img src="assets/photos/' + entry[0] + '" alt="' + escape(entry[altIndex]) + '" loading="lazy">';
+    '<img src="assets/photos/' + entry[0] + '" alt="' + escape(entry[altIndex]) + '" loading="lazy" decoding="async">';
+  const photoLink = (entry) =>
+    `<a href="assets/photos/${entry[0]}" data-photo="${photoIndexes.get(entry[0])}">${photo(entry)}</a>`;
   const renderStation = ({id, [lang]: [name, date]}, index) =>
     `<li class="timeline-stop" style="--route-row:${Math.floor(index / 2) + 1}">
       <a href="#${id}" data-stop="${id}"${id === start ? ' aria-current="step"' : ''}>
@@ -26,14 +31,13 @@ function render(lang, copy, preview = false) {
       </a>
     </li>`;
   const renderPostcard = ({id, [lang]: [name, date, heading, body]}) => {
-    const photoIndex = photos.findIndex((entry) => entry[3] === id);
-    const entry = photos[photoIndex];
+    const entry = photos[photoIndexes.get(postcardPhotos[id])];
     return `<article class="postcard" id="${id}" data-chapter tabindex="-1" aria-labelledby="${id}-heading">
         ${id === 'petworth' ? `<p class="postcard-meet">${escape(copy.meet)}</p>` : ''}
         <p class="postmark">${escape(name)} · ${escape(date)}</p>
         <h2 id="${id}-heading">${escape(heading)}</h2>
         ${entry ? `<figure class="postcard-photo">
-          <a href="assets/photos/${entry[0]}" data-photo="${photoIndex}">${photo(entry)}</a>
+          ${photoLink(entry)}
           <figcaption>${copy.photoNote}</figcaption>
         </figure>` : ''}
         <p class="postcard-body">${escape(body)}</p>
@@ -113,7 +117,13 @@ function render(lang, copy, preview = false) {
   </section>
   ${photos.length ? `<section class="album" aria-labelledby="album-heading">
     <header><h2 id="album-heading">${copy.gallery}</h2><p>${escape(copy.cast).replace('\n','<br>')}</p></header>
-    <div class="album-grid">${photos.map((entry, index) => `<a href="assets/photos/${entry[0]}" data-photo="${index}">${photo(entry)}</a>`).join('')}</div>
+    <nav class="album-locations" aria-label="${copy.albumLocations}">
+      ${albumStops.map(({id, [lang]: [name]}) => `<a href="#album-${id}">${escape(name)}</a>`).join('')}
+    </nav>
+    ${albumStops.map(({id, [lang]: [name]}) => `<section class="album-location" aria-labelledby="album-${id}">
+      <h3 id="album-${id}">${escape(name)}</h3>
+      <div class="album-grid">${photosByLocation[id].map(photoLink).join('')}</div>
+    </section>`).join('')}
   </section>
   <dialog aria-label="${copy.gallery}" class="lightbox">
     <form method="dialog"><button type="submit" aria-label="${copy.close}">×</button></form>

@@ -1,6 +1,8 @@
 const { copy, chapters, photos, start } = JSON.parse(document.querySelector('#journey-data').textContent);
 const map = document.querySelector('[data-map]');
 const pins = map.querySelector('.pins');
+const pawprints = map.querySelector('.map-pawprints');
+const pawprint = document.querySelector('#map-pawprint').content.firstElementChild;
 const canvas = map.querySelector('canvas');
 const ink = canvas.getContext('2d');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -10,7 +12,8 @@ const viewButtons = [...document.querySelectorAll('[data-view]')];
 const playButton = document.querySelector('[data-play]');
 const playLabel = playButton.querySelector('[data-play-label]');
 const postcardPhoto = document.querySelector('.postcard-photo');
-const postcardImage = postcardPhoto.querySelector('img');
+const postcardButton = postcardPhoto.querySelector('[data-open-photo]');
+const postcardImage = postcardButton.querySelector('img') ?? document.createElement('img');
 const languageLink = document.querySelector('[data-language]');
 const baseLanguageUrl = languageLink.href;
 const steps = [...document.querySelectorAll('[data-step]')];
@@ -26,8 +29,8 @@ const positions = {
   },
   usa: {
     'north-carolina': [23, 81, 'right'],
-    bethesda: [30, 48, 'left'],
-    jacques: [47, 46, 'right'],
+    bethesda: [33, 52, 'left'],
+    jacques: [44, 51, 'right'],
     petworth: [39, 61, 'right'],
     brooklyn: [59, 42, 'right'],
     vermont: [61, 22, 'right'],
@@ -38,7 +41,7 @@ const positions = {
   },
 };
 const flightPath = [[13, 69], [34, 25], [64, 13], [94, 36]];
-let selected = 0;
+let selected = -1;
 let view = 'atlantic';
 let player = 'idle';
 let tourTimer;
@@ -180,6 +183,7 @@ function draw() {
 }
 
 function renderMap(nextView) {
+  pawprints.replaceChildren();
   view = nextView;
   map.dataset.viewName = view;
   for (const button of viewButtons) button.setAttribute('aria-pressed', button.dataset.view === view);
@@ -210,6 +214,40 @@ function renderMap(nextView) {
   draw();
 }
 
+function animatePawprints(previousId, nextId) {
+  if (reducedMotion.matches) return;
+  const width = map.clientWidth;
+  const height = map.clientHeight;
+  const toPixels = ([x, y]) => [x * width / 100, y * height / 100];
+  const places = positions[view];
+  const [endX, endY] = toPixels(places[nextId]);
+  const [startX, startY] = places[previousId]
+    ? toPixels(places[previousId])
+    : [endX + (endX < width / 2 ? 1 : -1) * Math.min(130, width / 3),
+       endY + (endY < height / 2 ? 1 : -1) * Math.min(58, height / 4)];
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const distance = Math.hypot(dx, dy);
+  if (distance < 24) return;
+
+  const heading = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+  const count = Math.max(2, Math.min(8, Math.floor(distance / 23)));
+  const padding = Math.min(25, distance / 4);
+  for (let i = 0; i < count; i++) {
+    const progress = (padding + (distance - 2 * padding) * i / (count - 1)) / distance;
+    const offset = i % 2 === 0 ? 6 : -6;
+    const x = startX + dx * progress - dy / distance * offset;
+    const y = startY + dy * progress + dx / distance * offset;
+    const print = pawprint.cloneNode(true);
+    print.style.left = x + 'px';
+    print.style.top = y + 'px';
+    print.style.setProperty('--heading', (heading + offset) + 'deg');
+    print.style.setProperty('--delay', i * 85 + 'ms');
+    print.addEventListener('animationend', () => print.remove(), {once: true});
+    pawprints.append(print);
+  }
+}
+
 function runFlight() {
   if (reducedMotion.matches) return;
   let began;
@@ -225,6 +263,7 @@ function runFlight() {
 
 function select(index, { updateUrl = true, keepView = false } = {}) {
   if (index < 0 || index >= chapters.length) return;
+  const previousIndex = selected;
   selected = index;
   const chapter = chapters[index];
   cancelAnimationFrame(flightFrame);
@@ -244,10 +283,11 @@ function select(index, { updateUrl = true, keepView = false } = {}) {
   }
   postcardPhotoIndex = photos.findIndex((photo) => photo[2] === chapter.id);
   postcardPhoto.hidden = postcardPhotoIndex < 0;
-  if (postcardPhotoIndex >= 0 && postcardImage) {
+  if (postcardPhotoIndex >= 0) {
     const [file, alt] = photos[postcardPhotoIndex];
     postcardImage.src = 'assets/photos/' + file;
     postcardImage.alt = alt;
+    if (!postcardImage.isConnected) postcardButton.append(postcardImage);
   }
   steps[0].disabled = index === 0;
   steps[1].disabled = index === chapters.length - 1;
@@ -255,6 +295,9 @@ function select(index, { updateUrl = true, keepView = false } = {}) {
   if (updateUrl && location.hash !== hash) history.pushState(null, '', hash);
   languageLink.href = baseLanguageUrl + hash;
   renderMap(keepView ? view : chapter.view);
+  if (previousIndex >= 0 && index > previousIndex) {
+    animatePawprints(chapters[previousIndex].id, chapter.id);
+  }
   if (chapter.id === 'flight' && view === 'atlantic') runFlight();
 }
 
@@ -351,7 +394,7 @@ if (dialog && typeof dialog.showModal === 'function') {
       showPhoto(Number(link.dataset.photo));
     });
   }
-  postcardPhoto.querySelector('button').addEventListener('click', () => showPhoto(postcardPhotoIndex));
+  postcardButton.addEventListener('click', () => showPhoto(postcardPhotoIndex));
   for (const button of dialog.querySelectorAll('[data-photo-step]')) {
     button.addEventListener('click', () => showPhoto(photoIndex + Number(button.dataset.photoStep)));
   }

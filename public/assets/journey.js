@@ -1,19 +1,20 @@
 const { copy, chapters, photos, start } = JSON.parse(document.querySelector('#journey-data').textContent);
 const map = document.querySelector('[data-map]');
+const mapBoard = document.querySelector('[data-map-board]');
 const pins = map.querySelector('.pins');
 const pawprints = map.querySelector('.map-pawprints');
 const pawprint = document.querySelector('#map-pawprint').content.firstElementChild;
 const canvas = map.querySelector('canvas');
 const ink = canvas.getContext('2d');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const chapterArticles = [...document.querySelectorAll('[data-chapter]')];
-const timeline = document.querySelector('.timeline ol');
+const postcards = document.querySelector('[data-postcards]');
+const chapterArticles = [...postcards.querySelectorAll('[data-chapter]')];
+const closePostcardButton = postcards.querySelector('[data-close-postcard]');
+const stationLinks = [...document.querySelectorAll('.timeline [data-stop]')];
+const currentStop = document.querySelector('[data-current-stop]');
 const viewButtons = [...document.querySelectorAll('[data-view]')];
 const playButton = document.querySelector('[data-play]');
 const playLabel = playButton.querySelector('[data-play-label]');
-const postcardPhoto = document.querySelector('.postcard-photo');
-const postcardButton = postcardPhoto.querySelector('[data-open-photo]');
-const postcardImage = postcardButton.querySelector('img') ?? document.createElement('img');
 const languageLink = document.querySelector('[data-language]');
 const baseLanguageUrl = languageLink.href;
 const steps = [...document.querySelectorAll('[data-step]')];
@@ -47,7 +48,7 @@ let player = 'idle';
 let tourTimer;
 let flightFrame;
 let flightProgress;
-let postcardPhotoIndex = -1;
+let postcardOrigin;
 
 const point = ([x, y]) => [x * 10, y * 5];
 const chapterIndex = (id) => chapters.findIndex((chapter) => chapter.id === id);
@@ -188,6 +189,8 @@ function renderMap(nextView) {
   map.dataset.viewName = view;
   for (const button of viewButtons) button.setAttribute('aria-pressed', button.dataset.view === view);
   const activeId = chapters[selected].id;
+  const activeX = positions[view][activeId]?.[0] ?? 0;
+  mapBoard.dataset.postcardSide = activeX < 50 ? 'right' : 'left';
   const currentPins = new Map([...pins.children].map((pin) => [pin.dataset.stop, pin]));
   for (const [id, [x, y, placement]] of Object.entries(positions[view])) {
     const pin = currentPins.get(id) ?? document.createElement('a');
@@ -261,44 +264,55 @@ function runFlight() {
   flightFrame = requestAnimationFrame(frame);
 }
 
-function select(index, { updateUrl = true, keepView = false } = {}) {
+function select(index, { updateUrl = true, keepView = false, openPostcard = true } = {}) {
   if (index < 0 || index >= chapters.length) return;
   const previousIndex = selected;
   selected = index;
   const chapter = chapters[index];
   cancelAnimationFrame(flightFrame);
   flightProgress = undefined;
-  for (const article of chapterArticles) article.hidden = article.id !== chapter.id;
-  for (const link of timeline.querySelectorAll('[data-stop]')) {
-    if (link.dataset.stop === chapter.id) {
-      link.setAttribute('aria-current', 'step');
-      if (timeline.scrollWidth > timeline.clientWidth) {
-        const linkBox = link.getBoundingClientRect();
-        const listBox = timeline.getBoundingClientRect();
-        if (linkBox.left < listBox.left || linkBox.right > listBox.right) {
-          timeline.scrollLeft += linkBox.left - listBox.left - 5;
-        }
-      }
-    } else link.removeAttribute('aria-current');
+  for (const article of chapterArticles) {
+    const active = openPostcard && article.id === chapter.id;
+    article.hidden = !active;
+    article.toggleAttribute('data-active', active);
   }
-  postcardPhotoIndex = photos.findIndex((photo) => photo[2] === chapter.id);
-  postcardPhoto.hidden = postcardPhotoIndex < 0;
-  if (postcardPhotoIndex >= 0) {
-    const [file, alt] = photos[postcardPhotoIndex];
-    postcardImage.src = 'assets/photos/' + file;
-    postcardImage.alt = alt;
-    if (!postcardImage.isConnected) postcardButton.append(postcardImage);
+  postcards.hidden = !openPostcard;
+  mapBoard.toggleAttribute('data-postcard-open', openPostcard);
+  for (const link of stationLinks) {
+    if (link.dataset.stop === chapter.id) link.setAttribute('aria-current', 'step');
+    else link.removeAttribute('aria-current');
   }
+  currentStop.value = chapter.name;
   steps[0].disabled = index === 0;
   steps[1].disabled = index === chapters.length - 1;
   const hash = '#' + chapter.id;
   if (updateUrl && location.hash !== hash) history.pushState(null, '', hash);
   languageLink.href = baseLanguageUrl + hash;
   renderMap(keepView ? view : chapter.view);
-  if (previousIndex >= 0 && index > previousIndex) {
-    animatePawprints(chapters[previousIndex].id, chapter.id);
+  const previousChapter = chapters[previousIndex];
+  if (previousChapter && index > previousIndex && (!chapter.cat || chapter.cat === previousChapter.cat)) {
+    animatePawprints(previousChapter.id, chapter.id);
   }
   if (chapter.id === 'flight' && view === 'atlantic') runFlight();
+}
+
+function showMapBoard() {
+  const bounds = mapBoard.getBoundingClientRect();
+  if (bounds.top < 0 || bounds.bottom > window.innerHeight) {
+    mapBoard.scrollIntoView({block: 'start', behavior: reducedMotion.matches ? 'instant' : 'smooth'});
+  }
+}
+
+function closePostcard() {
+  setPlayer('idle');
+  postcards.hidden = true;
+  mapBoard.removeAttribute('data-postcard-open');
+  const activeId = chapters[selected].id;
+  const returnTo = postcardOrigin?.isConnected && !postcardOrigin.disabled
+    ? postcardOrigin
+    : pins.querySelector('[data-active]') ?? stationLinks.find((link) => link.dataset.stop === activeId);
+  returnTo?.focus();
+  postcardOrigin = undefined;
 }
 
 function setPlayer(state) {
@@ -326,7 +340,9 @@ playButton.addEventListener('click', () => {
   }
   const restart = player !== 'paused';
   setPlayer('playing');
+  postcardOrigin = playButton;
   if (restart) select(0, {updateUrl: false});
+  showMapBoard();
   scheduleNext();
 });
 
@@ -343,30 +359,39 @@ document.addEventListener('click', (event) => {
   const link = event.target.closest('a[data-stop]');
   if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   event.preventDefault();
-  const wasMapPin = link.classList.contains('pin');
-  const hadFocus = document.activeElement === link;
+  const id = link.dataset.stop;
   setPlayer('idle');
-  select(chapterIndex(link.dataset.stop));
-  if (wasMapPin && hadFocus && !link.isConnected) {
-    pins.querySelector('[data-active]')?.focus({preventScroll:true});
-  }
-  if (matchMedia('(max-width: 680px)').matches) {
-    document.querySelector('.postcard').scrollIntoView({block:'nearest', behavior:reducedMotion.matches ? 'instant' : 'smooth'});
-  }
+  postcardOrigin = link;
+  select(chapterIndex(id));
+  document.getElementById(id).focus({preventScroll: true});
+  showMapBoard();
+});
+
+closePostcardButton.addEventListener('click', closePostcard);
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape' || postcards.hidden || document.querySelector('.lightbox[open]')) return;
+  closePostcard();
 });
 
 for (const button of steps) {
   button.addEventListener('click', () => {
     setPlayer('idle');
+    postcardOrigin = button;
     select(selected + Number(button.dataset.step));
     if (button.disabled) steps.find((step) => !step.disabled).focus();
+    showMapBoard();
   });
 }
 
 function restoreChapter() {
   setPlayer('idle');
+  postcardOrigin = undefined;
   const index = chapterIndex(location.hash.slice(1));
-  select(index >= 0 ? index : chapterIndex(start), {updateUrl: false, keepView: index < 0 && view === 'atlantic'});
+  select(index >= 0 ? index : chapterIndex(start), {
+    updateUrl: false,
+    keepView: index < 0 && view === 'atlantic',
+    openPostcard: index >= 0,
+  });
 }
 window.addEventListener('popstate', restoreChapter);
 window.addEventListener('hashchange', () => {
@@ -394,7 +419,6 @@ if (dialog && typeof dialog.showModal === 'function') {
       showPhoto(Number(link.dataset.photo));
     });
   }
-  postcardButton.addEventListener('click', () => showPhoto(postcardPhotoIndex));
   for (const button of dialog.querySelectorAll('[data-photo-step]')) {
     button.addEventListener('click', () => showPhoto(photoIndex + Number(button.dataset.photoStep)));
   }
@@ -411,6 +435,7 @@ if (dialog && typeof dialog.showModal === 'function') {
   });
 }
 restoreChapter();
+closePostcardButton.hidden = false;
 playButton.hidden = false;
 document.querySelector('.views').hidden = false;
 document.querySelector('.story-controls').hidden = false;

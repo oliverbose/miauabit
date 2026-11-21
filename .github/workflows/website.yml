@@ -1,0 +1,80 @@
+name: Website
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build both editions
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: |
+          node --check public/assets/journey.js
+          bash -n scripts/deploy-strato.sh
+          node scripts/build.mjs
+
+  deploy:
+    name: Deploy to STRATO
+    needs: build
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && vars.STRATO_AUTO_DEPLOY == 'true'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    concurrency:
+      group: strato-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: node scripts/build.mjs
+      - name: Check the current main revision before uploading
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          current_main=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
+          if [[ "$GITHUB_SHA" != "$current_main" ]]; then
+            echo 'main has advanced. Run the workflow again from the current main.' >&2
+            exit 1
+          fi
+      - name: Upload and verify both editions over SFTP
+        env:
+          STRATO_SFTP_HOST: ${{ vars.STRATO_SFTP_HOST }}
+          STRATO_SFTP_USER: ${{ vars.STRATO_SFTP_USER }}
+          STRATO_SFTP_KNOWN_HOSTS: ${{ vars.STRATO_SFTP_KNOWN_HOSTS }}
+          STRATO_SFTP_PASSWORD: ${{ secrets.STRATO_SFTP_PASSWORD }}
+        run: bash scripts/deploy-strato.sh
+      - name: Verify both live HTTPS homepages
+        if: vars.STRATO_VERIFY_HTTPS != 'false'
+        run: |
+          response=$(mktemp)
+          trap 'rm -f "$response"' EXIT
+          for edition in miauabit meowabit; do
+            curl --fail --silent --show-error --location --proto-redir '=https' \
+              --retry 3 --max-time 30 --output "$response" "https://$edition.de/?revision=$GITHUB_SHA"
+            if ! cmp -s "dist/$edition/index.html" "$response"; then
+              echo "https://$edition.de/ did not serve the deployed homepage." >&2
+              exit 1
+            fi
+          done

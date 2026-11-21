@@ -18,7 +18,7 @@ Keep this file up to date with project decisions made in chat. Update the curren
 
 - Build both editions with `node scripts/build.mjs` from the repository root.
 - Run `python3 -m http.server 4173 --bind 127.0.0.1 --directory dist` for the local preview. Use `/preview/de/` for German and `/preview/en/` for English. Both editions share the same stop and photo catalogs.
-- The intended Strato domains are `miauabit.de` for German and `meowabit.de` for English. Deployment was deferred. The [README](README.md) documents the hosting setup.
+- The intended STRATO domains are `miauabit.de` for German and `meowabit.de` for English. GitHub Actions builds both editions and deploys over SFTP from `main` when the Website workflow is run manually. The `STRATO_AUTO_DEPLOY` repository variable can opt into deploying successful pushes to `main` later. The [README](README.md) documents the hosting setup.
 - The site is non-commercial and serves exclusively personal and family purposes. Link to an Impressum and hosting privacy information from each edition’s footer. Cite § 18 Abs. 1 MStV as plain text in the Impressum. The privacy page explains STRATO access logs and the site’s use of locally served assets.
 
 ## Journey layout
